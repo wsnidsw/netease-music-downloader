@@ -33,7 +33,16 @@ export default function Home() {
     setSongInfo(null);
     try {
       const res = await fetch(`/api/song?link=${encodeURIComponent(link.trim())}`);
-      const data = await res.json();
+      const text = await res.text();
+      let data: any;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        if (text.includes("<!DOCTYPE")) {
+          throw new Error("服务器无法访问网易 API（可能被 geo-block），请使用本地版本");
+        }
+        throw new Error("解析失败，请检查链接是否正确");
+      }
       if (!res.ok) throw new Error(data.error || "请求失败");
       setSongInfo(data);
       setDownloads({ audio: !!data.audioUrl, cover: !!data.coverUrl, lyric: true });
@@ -56,18 +65,9 @@ export default function Home() {
   async function handleDownload(type: "audio" | "cover" | "lyric" | "all") {
     if (!songInfo) return;
     setDownloading(type);
-
     try {
-      if (type === "all") {
-        triggerDownload(`/api/download/all?songId=${songInfo.id}`);
-        setDownloading(null);
-        return;
-      }
       triggerDownload(`/api/download/${type}?songId=${songInfo.id}`);
-    } catch {
-      /* ignore */
-    }
-
+    } catch { /* ignore */ }
     setTimeout(() => setDownloading(null), 1500);
   }
 
@@ -129,7 +129,6 @@ export default function Home() {
       {/* Result Card */}
       {songInfo && (
         <div className="glass-card w-full max-w-2xl p-5 sm:p-6 animate-in">
-          {/* Song Info */}
           <div className="flex gap-4 sm:gap-5 mb-5">
             {songInfo.coverUrl ? (
               <img
@@ -156,7 +155,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Lyrics Preview */}
           {songInfo.lyric && (
             <div className="mb-5">
               <p className="text-xs text-white/30 mb-2">歌词预览</p>
@@ -173,7 +171,6 @@ export default function Home() {
             </div>
           )}
 
-          {/* Download Section */}
           <div className="border-t border-white/[0.06] pt-5">
             <p className="text-xs text-white/30 mb-3">选择下载内容</p>
             <div className="flex flex-wrap items-center gap-4 sm:gap-6 mb-4">
@@ -211,38 +208,22 @@ export default function Home() {
 
             <div className="flex flex-wrap gap-3">
               {downloads.audio && songInfo.audioUrl && (
-                <button
-                  onClick={() => handleDownload("audio")}
-                  disabled={downloading !== null}
-                  className="btn-primary px-4 py-2.5 text-sm"
-                >
+                <button onClick={() => handleDownload("audio")} disabled={downloading !== null} className="btn-primary px-4 py-2.5 text-sm">
                   {downloading === "audio" ? "下载中..." : "下载 MP3"}
                 </button>
               )}
               {downloads.cover && (
-                <button
-                  onClick={() => handleDownload("cover")}
-                  disabled={downloading !== null}
-                  className="btn-primary px-4 py-2.5 text-sm"
-                >
+                <button onClick={() => handleDownload("cover")} disabled={downloading !== null} className="btn-primary px-4 py-2.5 text-sm">
                   {downloading === "cover" ? "下载中..." : "下载封面"}
                 </button>
               )}
               {downloads.lyric && (
-                <button
-                  onClick={() => handleDownload("lyric")}
-                  disabled={downloading !== null}
-                  className="btn-primary px-4 py-2.5 text-sm"
-                >
+                <button onClick={() => handleDownload("lyric")} disabled={downloading !== null} className="btn-primary px-4 py-2.5 text-sm">
                   {downloading === "lyric" ? "下载中..." : "下载歌词"}
                 </button>
               )}
               {hasSelection && (
-                <button
-                  onClick={() => handleDownload("all")}
-                  disabled={downloading !== null}
-                  className="px-4 py-2.5 text-sm rounded-xl font-semibold border border-[#ec4141]/40 text-[#ec4141] hover:bg-[#ec4141]/10 transition-colors"
-                >
+                <button onClick={() => handleDownload("all")} disabled={downloading !== null} className="px-4 py-2.5 text-sm rounded-xl font-semibold border border-[#ec4141]/40 text-[#ec4141] hover:bg-[#ec4141]/10 transition-colors">
                   {downloading === "all" ? "打包中..." : "下载全部"}
                 </button>
               )}
@@ -258,7 +239,11 @@ export default function Home() {
       )}
 
       {/* Footer */}
-      <p className="mt-12 text-xs text-white/15">
+      <p className="mt-12 text-xs text-white/20 text-center max-w-md leading-relaxed">
+        在线部署受 geo-block 限制，推荐本地使用：
+        <br />
+        <code className="text-white/30">git clone &amp;&amp; npm install &amp;&amp; npm run dev</code>
+        <br />
         仅供个人学习使用 · 请支持正版音乐
       </p>
     </div>

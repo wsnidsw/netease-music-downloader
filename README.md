@@ -1,21 +1,19 @@
 ﻿# 网易云音乐下载站
 
-> 🌐 **在线使用：[wyy-sooty.vercel.app](https://wyy-sooty.vercel.app)**
+粘贴网易云音乐分享链接，下载 MP3 音频、封面图片、歌词。支持单独下载或一键打包 ZIP。
 
-粘贴网易云音乐分享链接，下载 MP3 音频、封面图片、歌词。支持单独下载或一键打包 ZIP。零外部依赖，一个项目搞定。
+> ⚠️ Vercel 等海外平台部署后无法访问网易 API（geo-block），推荐本地使用。
 
 ## 快速开始
 
 ```bash
+git clone https://github.com/wsnidsw/netease-music-downloader.git
+cd netease-music-downloader
 npm install
 npm run dev
 ```
 
-打开 `http://localhost:3000`，粘贴网易云分享链接即可。
-
-## 部署到 Vercel
-
-直接推送仓库，Vercel 自动部署。无需额外环境变量或后端服务。
+打开 `http://localhost:3000`。
 
 ## 支持的链接格式
 
@@ -35,5 +33,5 @@ npm run dev
 
 - Next.js 16 (App Router)
 - TypeScript + Tailwind CSS
-- NeteaseCloudMusicApi (内置 npm 包，无需外部服务)
+- NeteaseCloudMusicApi
 - JSZip
