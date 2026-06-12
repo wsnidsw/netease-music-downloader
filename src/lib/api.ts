@@ -1,7 +1,8 @@
-﻿import { song_detail, song_url_v1, lyric } from "NeteaseCloudMusicApi";
-
-// The NeteaseCloudMusicApi types are minimal, so we use any for the response bodies.
-// All runtime values are correct - this is only a TypeScript typing limitation.
+﻿import {
+  song_detail,
+  song_url_v1,
+  lyric,
+} from "NeteaseCloudMusicApi";
 
 export async function getSongDetail(songId: string): Promise<any> {
   const result: any = await song_detail({ ids: songId });
