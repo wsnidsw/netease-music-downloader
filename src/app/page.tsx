@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface SongInfo {
   id: string;
@@ -30,6 +30,19 @@ export default function Home() {
   const [downloading, setDownloading] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
+  // Shutdown server when page is closed
+  useEffect(() => {
+    const handleUnload = () => {
+      navigator.sendBeacon("/api/shutdown");
+    };
+    window.addEventListener("beforeunload", handleUnload);
+    window.addEventListener("pagehide", handleUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleUnload);
+      window.removeEventListener("pagehide", handleUnload);
+    };
+  }, []);
+
   function showToast(msg: string) {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
@@ -40,14 +53,10 @@ export default function Home() {
     setLoading(true);
     setError(null);
     setSongInfo(null);
-
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 30000);
-
     try {
-      const res = await fetch(`/api/song?link=${encodeURIComponent(link.trim())}`, {
-        signal: controller.signal,
-      });
+      const res = await fetch(`/api/song?link=${encodeURIComponent(link.trim())}`, { signal: controller.signal });
       const text = await res.text();
       let data: any;
       try { data = JSON.parse(text); } catch {
@@ -58,11 +67,8 @@ export default function Home() {
       setSongInfo(data);
       setDownloads({ audio: !!data.audioUrl, cover: !!data.coverUrl, lyric: true });
     } catch (e: any) {
-      if (e.name === "AbortError") {
-        setError("请求超时（30s），请检查网络后重试");
-      } else {
-        setError(e.message || "解析失败，请检查链接是否正确");
-      }
+      if (e.name === "AbortError") setError("请求超时（30s），请检查网络后重试");
+      else setError(e.message || "解析失败，请检查链接是否正确");
     } finally {
       clearTimeout(timer);
       setLoading(false);
@@ -74,13 +80,18 @@ export default function Home() {
     setDownloading(type);
     try {
       const url = `/api/download/${type}?songId=${songInfo.id}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Download failed");
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url;
+      a.href = objectUrl;
       a.download = "";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      showToast(`✅ ${DOWNLOAD_LABELS[type]} 已开始下载，请查看浏览器下载目录`);
+      URL.revokeObjectURL(objectUrl);
+      showToast(`✅ ${DOWNLOAD_LABELS[type]} 已下载完成`);
     } catch {
       showToast("❌ 下载失败，请重试");
     }

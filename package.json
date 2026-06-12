@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "node scripts/kill-port.mjs 3000 && next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "node scripts/kill-port.mjs 3000 && next start",
+    "prod": "npm run build && npm run start",
     "lint": "eslint",
     "restart": "node scripts/kill-port.mjs 3000 && next dev"
   },
